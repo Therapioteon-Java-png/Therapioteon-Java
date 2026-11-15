@@ -25,8 +25,46 @@ const blocks=[
  ['Pracovní stůl',0x9a673d,'🛠️'],['Pec',0x55565b,'🔥'],['Truhla',0xa9783f,'📦'],['Sud',0x8b633a,'🛢️'],
  ['Dveře',0x9a7043,'🚪'],['Půlblok',0xb58a54,'➖'],['Schody',0x9b754b,'🪜'],['Plot',0x986536,'🪵'],
  ['Cedule',0xc39a60,'🪧'],['Redstone blok',0x9d2929,'🔴'],['TNT',0xc94335,'🧨'],['Obsidián',0x302344,'🟪'],
- ['Voda',0x357bd1,'💧'],['Láva',0xe46a20,'🌋']
+
 ];
+const extraBlockNames=["Akáciové tlačítko","Akáciové dveře","Akáciový plot","Akáciová plotová branka","Akáciová závěsná cedule","Akáciové listí","Akáciová kláda","Akáciová prkna","Akáciová nášlapná deska","Akáciová sazenice","Akáciová police","Akáciová cedule","Akáciová deska","Akáciové schody","Akáciová padací dvířka","Akáciová závěsná cedule na stěně","Akáciová nástěnná cedule","Akáciové dřevo","Aktivační koleje","Vzduch","Okrasný česnek","Ametystový trs","Prastaré trosky","Andezit","Andezitová deska","Andezitové schody","Andezitová zídka","Kovadlina","Připojená melounová lodyha","Připojená dýňová lodyha","Azalka","Azalkové listí","Modřenec","Bambus","Bambusové tlačítko","Bambusové dveře","Bambusový plot","Bambusová plotová branka","Bambusová závěsná cedule","Bambusová mozaika","Bambusová mozaiková deska","Bambusové mozaikové schody","Bambusová prkna","Bambusová nášlapná deska","Bambusová police","Bambusový výhonek","Bambusová cedule","Bambusová deska","Bambusové schody","Bambusová padací dvířka","Bambusová závěsná cedule na stěně","Bambusová nástěnná cedule","Sud","Bariéra","Čedič","Maják","Bedrock","Včelí hnízdo","Včelí úl","Červená řepa","Zvonek","Velký kapradinový list","Stonek velkého kapradinového listu","Březové tlačítko","Březové dveře","Březový plot","Březová plotová branka","Březová závěsná cedule","Březové listí","Březová kláda","Březová prkna","Březová nášlapná deska","Březová sazenice","Březová police","Březová cedule","Březová deska","Březové schody","Březová padací dvířka","Březová závěsná cedule na stěně","Březová nástěnná cedule","Březové dřevo","Černý prapor","Černá postel","Černá svíčka","Černý koberec","Černý beton","Černý betonový prášek","Černá betonová deska","Černé betonové schody","Černá glazovaná terakota","Černá shulkerová schránka","Černé tónované sklo","Černá skleněná tabule","Černá terakota","Černá vlna","Černá vlněná deska","Černé vlněné schody","Černokámen","Deska z černokamene","Schody z černokamene","Zídka z černokamene","Vysoká pec","Blok ametystu","Blok bambusu","Blok uhlí","Blok mědi","Blok diamantu","Blok smaragdu","Blok zlata","Blok železa","Blok lazuritu","Blok netheritu","Blok křemene","Blok surové mědi","Blok surového zlata","Blok surového železa","Redstone blok","Blok pryskyřice","Blok oloupaného bambusu","Modrý prapor","Modrá postel","Modrá svíčka","Modrý koberec","Modrý beton","Modrý betonový prášek","Modrá betonová deska","Modré betonové schody","Modrá glazovaná terakota","Modrý led","Modrá orchidej","Modrá shulkerová schránka","Modré tónované sklo","Modrá skleněná tabule","Modrá terakota","Modrá vlna","Modrá vlněná deska","Modré vlněné schody","Kostěný blok","Knihovna","Mozkový korál","Blok mozkového korálu","Vějíř mozkového korálu","Nástěnný vějíř mozkového korálu","Varný stojan","Cihlová deska","Cihlové schody","Cihlová zídka","Cihly","Hnědý prapor","Hnědá postel","Hnědá svíčka","Hnědý koberec","Hnědý beton","Hnědý betonový prášek","Hnědá betonová deska","Hnědé betonové schody","Hnědá glazovaná terakota","Hnědá houba","Blok hnědé houby","Hnědá shulkerová schránka","Hnědé tónované sklo","Hnědá skleněná tabule","Hnědá terakota","Hnědá vlna","Hnědá vlněná deska","Hnědé vlněné schody","Bublinkový sloupec","Bublinový korál","Blok bublinového korálu","Vějíř bublinového korálu","Nástěnný vějíř bublinového korálu","Rostoucí ametyst","Keř","Kaktus","Kaktusový květ","Dort","Dort s černou svíčkou","Dort s modrou svíčkou","Dort s hnědou svíčkou","Dort se svíčkou","Dort s azurovou svíčkou","Dort se šedou svíčkou","Dort se zelenou svíčkou","Dort se světle modrou svíčkou","Dort se světle šedou svíčkou","Dort s limetkovou svíčkou","Dort s purpurovou svíčkou","Dort s oranžovou svíčkou","Dort s růžovou svíčkou","Dort s fialovou svíčkou","Dort s červenou svíčkou","Dort s bílou svíčkou","Dort se žlutou svíčkou","Kal cit","Kal citový blok","Kalibrovaný sculk senzor","Táborák","Svíčka","Mrkev","Kartografický stůl","Vyřezávaná dýně"];
+function blockColor(name){
+ const n=name.toLowerCase();
+ if(/vzduch/.test(n))return 0x9bcbe8;
+ if(/voda|korál|led|sklo|ametyst|modr|azurov/.test(n))return 0x65b8d8;
+ if(/láva|svíčk|ohn|dort/.test(n))return 0xd66a32;
+ if(/listí|azalka|keř|květ|orchidej|česnek|modřenec|sazenice|bambus|mrkev|řepa|houba|kaktus/.test(n))return 0x57964a;
+ if(/zlato|žlut|písek|písk|slám|surového zlata/.test(n))return 0xc5a64c;
+ if(/diamant|smaragd|měď|pryskyřice|redstone|červen|ruda|lazurit/.test(n))return 0x9a6652;
+ if(/čern|obsidián|netherit|černokámen|bedrock|bariéra/.test(n))return 0x35343b;
+ if(/bíl|sníh|kost|křemen|kal cit/.test(n))return 0xd9d9d0;
+ if(/cihl|terakot|hněd|dřevo|kláda|prkna|cedule|plot|police|postel|truhla|sud|dveře|schody|deska|zídka|branka|padací/.test(n))return 0x986d49;
+ if(/kámen|andezit|čedič|kovadlin|pec|kolej|maják|blok/.test(n))return 0x777b7d;
+ if(/prapor|vlna|koberec|beton/.test(n))return 0x6b6d83;
+ return 0x8b8b78;
+}
+function blockIcon(name){
+ const n=name.toLowerCase();
+ if(/dveře|padací/.test(n))return '🚪';
+ if(/plot|branka/.test(n))return '🪵';
+ if(/cedule|prapor/.test(n))return '🪧';
+ if(/listí|květ|orchidej|česnek|modřenec|azalka|keř/.test(n))return '🌿';
+ if(/dřevo|kláda|prkna|bambus/.test(n))return '🪵';
+ if(/ruda|diamant|ametyst|zlato|železo|měď/.test(n))return '💎';
+ if(/postel/.test(n))return '🛏️';
+ if(/svíčk/.test(n))return '🕯️';
+ if(/dort/.test(n))return '🍰';
+ if(/kolej/.test(n))return '🛤️';
+ if(/voda|korál|led/.test(n))return '💧';
+ if(/houba/.test(n))return '🍄';
+ if(/mrkev|řepa|kaktus|květ/.test(n))return '🌱';
+ if(/pec|táborák/.test(n))return '🔥';
+ if(/truhla|shulker|sud/.test(n))return '📦';
+ if(/kámen|andezit|čedič|bedrock|černokámen/.test(n))return '🪨';
+ return '🧱';
+}
+blocks.push(...extraBlockNames.map(name=>[name,blockColor(name),blockIcon(name)]));
+
 let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false,creativeMode=true,inventory=Array.from({length:blocks.length},()=>0),chatLines=[];
 const PLAYER_RADIUS=.3,PLAYER_EYE=1.62,PLAYER_HEAD=.18;
 const canvas=document.getElementById('world'),hotbar=document.getElementById('hotbar');
