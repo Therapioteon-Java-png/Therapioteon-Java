@@ -11,7 +11,7 @@
 <section id="solo" class="screen"><main><h2>Hra jednoho hráče</h2><label for="worldName">Název světa</label><input id="worldName" value="Můj svět"><div class="row"><div><label for="difficulty">Obtížnost</label><select id="difficulty"><option>Mírumilovná</option><option>Lehká</option><option selected>Normální</option><option>Těžká</option></select></div><div><label for="mode">Herní režim</label><select id="mode"><option>Creative</option><option>Survival</option></select></div></div><div class="notice">První testovací svět je kreativní stavební prototyp. Bloky můžeš neomezeně pokládat a rozbíjet.</div><button onclick="launch()">VYTVOŘIT SVĚT</button> <button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="multi" class="screen"><main><h2>Hra více hráčů</h2><label for="multiPlayer">Tvoje herní jméno pro multiplayer</label><input id="multiPlayer" maxlength="16" placeholder="Zadej jméno, pod kterým tě uvidí ostatní"><div class="notice">Online multiplayer zatím není zapojený. Teď je dostupný testovací svět pro jednoho hráče.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="settings" class="screen"><main><h2>Nastavení</h2><div class="notice">Herní jméno není pro singleplayer potřeba. Zadává se až při vstupu do multiplayeru.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
-<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><div style="display:flex;gap:7px"><button class="secondary exit" onclick="leaveGame()">MENU</button></div></div><div class="crosshair">+</div><div class="panel hint" id="hint">Klikni do světa pro zaměření • WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 výběr bloku</div><div class="hotbar" id="hotbar"></div><div class="game-tools"><button onclick="openPanel('inventory')">O Inventář</button><button onclick="openPanel('craft')">E Crafting</button><button onclick="openPanel('chat')">T Chat</button><button onclick="openPanel('helper')">H Pomocník</button><button onclick="openPanel('emotes')">B Emoce</button></div><div class="game-panel" id="gamePanel"><button class="secondary panel-close" onclick="closePanel()">ZAVŘÍT ✕</button><div id="gamePanelContent"></div></div></div></section>
+<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><div style="display:flex;gap:7px"><button class="secondary exit" onclick="leaveGame()">MENU</button></div></div><div class="crosshair">+</div><div class="panel hint" id="hint">Obrovský postupně načítaný svět • Klikni do světa • WASD pohyb • mezerník skok • levé rozbije • pravé položí • 1–8 bloky</div><div class="hotbar" id="hotbar"></div><div class="game-tools"><button onclick="openPanel('inventory')">O Inventář</button><button onclick="openPanel('craft')">E Crafting</button><button onclick="openPanel('chat')">T Chat</button><button onclick="openPanel('helper')">H Pomocník</button><button onclick="openPanel('emotes')">B Emoce</button></div><div class="game-panel" id="gamePanel"><button class="secondary panel-close" onclick="closePanel()">ZAVŘÍT ✕</button><div id="gamePanelContent"></div></div></div></section>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -43,24 +43,47 @@ document.addEventListener('keydown',e=>{
 canvas.addEventListener('click',()=>{if(!locked)canvas.requestPointerLock()});document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;document.getElementById('hint').textContent=locked?'WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 bloky • ESC uvolní myš':'Klikni do světa pro zaměření • WASD • mezerník • levé rozbije • pravé položí • 1–8 bloky'});
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-1.45,Math.min(1.45,pitch));camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0)});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(!locked)return;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const hits=raycaster.intersectObjects(objects);if(!hits.length)return;const hit=hits[0];if(e.button===0){if(!creativeMode)inventory[hit.object.userData.type]=(inventory[hit.object.userData.type]||0)+1;scene.remove(hit.object);objects=objects.filter(o=>o!==hit.object);hit.object.geometry.dispose();hit.object.material.dispose()}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);if(!creativeMode&&inventory[selected]<1)return;if(p.distanceTo(camera.position)>1.5){const before=objects.length;addBlock(Math.round(p.x),Math.round(p.y),Math.round(p.z),selected);if(!creativeMode&&objects.length>before)inventory[selected]--;}}});
-animate();}
+generateWorld();animate();}
 function terrainHeight(x,z){return Math.floor((Math.sin(x*.23)+Math.cos(z*.21)+Math.sin((x+z)*.12))*1.15);}
+const CHUNK_SIZE=16,VIEW_CHUNKS=1;
+const loadedChunks=new Map();
+let activeChunkBuildKey=null,lastPlayerChunk='';
+function loadChunk(cx,cz){
+ const key=cx+','+cz;if(loadedChunks.has(key))return;
+ const chunkMeshes=[];loadedChunks.set(key,chunkMeshes);activeChunkBuildKey=key;
+ const x0=cx*CHUNK_SIZE,z0=cz*CHUNK_SIZE;
+ for(let x=x0;x<x0+CHUNK_SIZE;x++)for(let z=z0;z<z0+CHUNK_SIZE;z++){
+  const h=terrainHeight(x,z);
+  for(let y=Math.max(-3,h-2);y<=h;y++){const type=y===h?(h<=-1?3:0):(y>=h-1?1:2);addBlock(x,y,z,type);}
+  // Stromy se generují deterministicky, takže při návratu vypadají stejně.
+  const treeSeed=Math.abs((x*73856093)^(z*19349663));
+  if(treeSeed%113===0){
+   for(let y=1;y<=3;y++)addBlock(x,h+y,z,4);
+   for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++)
+    if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<4)addBlock(x+dx,h+dy,z+dz,5);
+  }
+ }
+ activeChunkBuildKey=null;
+}
+function updateChunks(){
+ const cx=Math.floor(camera.position.x/CHUNK_SIZE),cz=Math.floor(camera.position.z/CHUNK_SIZE);
+ const playerKey=cx+','+cz;if(playerKey===lastPlayerChunk)return;lastPlayerChunk=playerKey;
+ for(let dx=-VIEW_CHUNKS;dx<=VIEW_CHUNKS;dx++)for(let dz=-VIEW_CHUNKS;dz<=VIEW_CHUNKS;dz++)loadChunk(cx+dx,cz+dz);
+ for(const [key,meshes] of loadedChunks){
+  const [kx,kz]=key.split(',').map(Number);
+  if(Math.abs(kx-cx)>VIEW_CHUNKS||Math.abs(kz-cz)>VIEW_CHUNKS){
+   for(const mesh of meshes){scene.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}
+   const gone=new Set(meshes);objects=objects.filter(mesh=>!gone.has(mesh));loadedChunks.delete(key);
+  }
+ }
+}
 function generateWorld(){
  for(const old of objects){scene.remove(old);old.geometry.dispose();old.material.dispose();}
- objects=[];camera.position.set(0,1000,0);velocity.set(0,0,0);grounded=false;
- for(let x=-20;x<=20;x++)for(let z=-20;z<=20;z++){
-  const h=terrainHeight(x,z);
-  for(let y=-3;y<=h;y++){const type=y===h?(h<=-1?3:0):(y>=h-2?1:2);addBlock(x,y,z,type);}
- }
- // Stromy na vybraných místech; kmeny a koruny jsou skutečné kolizní bloky.
- for(const [x,z] of [[-7,-5],[7,-8],[10,5],[-12,9],[3,13],[-15,-12],[14,-14]]){
-  const base=terrainHeight(x,z);
-  for(let y=1;y<=3;y++)addBlock(x,base+y,z,4);
-  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++)
-   if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<4)addBlock(x+dx,base+dy,z+dz,5);
- }
+ objects=[];loadedChunks.clear();activeChunkBuildKey=null;lastPlayerChunk='';
+ velocity.set(0,0,0);grounded=false;
  const spawnY=terrainHeight(0,7)+.5+PLAYER_EYE;
  camera.position.set(0,spawnY,7);
+ updateChunks();
 }
 function openPanel(kind){
  if(document.pointerLockElement)document.exitPointerLock();
@@ -100,11 +123,12 @@ function addBlock(x,y,z,type){
  const testPos=camera?camera.position:new THREE.Vector3(999,999,999);
  if(camera&&playerOverlapsBlock(testPos,{position:new THREE.Vector3(x,y,z)}))return;
  const material=new THREE.MeshStandardMaterial({color:blocks[type][1],roughness:type===6?.18:.9,transparent:type===6,opacity:type===6?.48:1});
- const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.type=type;scene.add(mesh);objects.push(mesh)
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.type=type;scene.add(mesh);objects.push(mesh);if(activeChunkBuildKey&&loadedChunks.has(activeChunkBuildKey))loadedChunks.get(activeChunkBuildKey).push(mesh)
 }
 function animate(){
  requestAnimationFrame(animate);
  if(!started||!document.getElementById('game').classList.contains('active'))return;
+ updateChunks();
  const dt=Math.min(clock.getDelta(),.04);
  if(locked){
   const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
