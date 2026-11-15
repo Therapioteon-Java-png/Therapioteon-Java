@@ -11,7 +11,7 @@
 <section id="solo" class="screen"><main><h2>Hra jednoho hráče</h2><label for="worldName">Název světa</label><input id="worldName" value="Můj svět"><div class="row"><div><label for="difficulty">Obtížnost</label><select id="difficulty"><option>Mírumilovná</option><option>Lehká</option><option selected>Normální</option><option>Těžká</option></select></div><div><label for="mode">Herní režim</label><select id="mode"><option>Creative</option><option>Survival</option></select></div></div><div class="notice">První testovací svět je kreativní stavební prototyp. Bloky můžeš neomezeně pokládat a rozbíjet.</div><button onclick="launch()">VYTVOŘIT SVĚT</button> <button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="multi" class="screen"><main><h2>Hra více hráčů</h2><label for="multiPlayer">Tvoje herní jméno pro multiplayer</label><input id="multiPlayer" maxlength="16" placeholder="Zadej jméno, pod kterým tě uvidí ostatní"><div class="notice">Online multiplayer zatím není zapojený. Teď je dostupný testovací svět pro jednoho hráče.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="settings" class="screen"><main><h2>Nastavení</h2><div class="notice">Herní jméno není pro singleplayer potřeba. Zadává se až při vstupu do multiplayeru.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
-<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><div style="display:flex;gap:7px"><button class="secondary exit" onclick="leaveGame()">MENU</button></div></div><div class="crosshair">+</div><div class="panel hint" id="hint">Obrovský postupně načítaný svět • Klikni do světa • WASD pohyb • mezerník skok • levé rozbije • pravé položí • 1–8 bloky</div><div class="hotbar" id="hotbar"></div><div class="game-tools"><button onclick="openPanel('inventory')">O Inventář</button><button onclick="openPanel('craft')">E Crafting</button><button onclick="openPanel('chat')">T Chat</button><button onclick="openPanel('helper')">H Pomocník</button><button onclick="openPanel('emotes')">B Emoce</button></div><div class="game-panel" id="gamePanel"><button class="secondary panel-close" onclick="closePanel()">ZAVŘÍT ✕</button><div id="gamePanelContent"></div></div></div></section>
+<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><div style="display:flex;gap:7px"><button class="secondary exit" onclick="leaveGame()">MENU</button></div></div><div class="crosshair">+</div><div class="panel hint" id="hint">Obrovský postupně načítaný svět • Klikni do světa • WASD pohyb • mezerník skok • levé rozbije • pravé položí • 1–8 bloky</div><div class="hotbar" id="hotbar"></div><div class="game-tools"><button onclick="openPanel('inventory')">E Inventář</button><button onclick="openPanel('craft')">Crafting</button><button onclick="openPanel('chat')">T Chat</button><button onclick="openPanel('helper')">H Pomocník</button><button onclick="openPanel('emotes')">B Emoce</button></div><div class="game-panel" id="gamePanel"><button class="secondary panel-close" onclick="closePanel()">ZAVŘÍT ✕</button><div id="gamePanelContent"></div></div></div></section>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -83,7 +83,7 @@ document.addEventListener('keydown',e=>{
  keys[e.code]=true;
  if(/^Digit[1-8]$/.test(e.code))selectHotbar(Number(e.code.slice(5))-1);
  if(e.code==='KeyO'){e.preventDefault();openPanel('inventory');}
- if(e.code==='KeyE'){e.preventDefault();openPanel('craft');}
+ if(e.code==='KeyE'){e.preventDefault();openPanel('inventory');}
  if(e.code==='KeyT'){e.preventDefault();openPanel('chat');}
  if(e.code==='KeyH'){e.preventDefault();openPanel('helper');}
  if(e.code==='KeyB'){e.preventDefault();openPanel('emotes');}
@@ -141,7 +141,7 @@ function openPanel(kind){
  const names={inventory:'Inventář',craft:'Crafting',chat:'Chat',helper:'Pomocník THERAPIOTEON',emotes:'Emoce a tance'};
  let html='<h2>'+names[kind]+'</h2>';
  if(kind==='inventory'){
-  html+='<p>Vyber z '+blocks.length+' položek. V režimu Creative jsou neomezené. Čísla 1–8 vybírají hotbar.</p><input id="blockSearch" placeholder="Hledat blok…" oninput="filterBlocks(this.value)"><div class="panel-grid" id="blockGrid">';
+  html+='<p>Vyber z '+blocks.length+' položek. V režimu Creative jsou neomezené. Čísla 1–8 vybírají hotbar.</p><button class="secondary" onclick="openPanel(\'craft\')">OTEVŘÍT CRAFTING</button><input id="blockSearch" placeholder="Hledat blok…" oninput="filterBlocks(this.value)"><div class="panel-grid" id="blockGrid">';
   blocks.forEach((b,i)=>html+='<button title="'+b[0]+'" onclick="selectBlock('+i+');closePanel()">'+b[2]+'<br>'+b[0]+'<br>'+(creativeMode?'∞':(inventory[i]||0))+'</button>');
   html+='</div>';
  }else if(kind==='craft'){
@@ -161,6 +161,8 @@ function escapeText(s){return s.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','
 function sendChat(){const input=document.getElementById('chatInput');if(!input||!input.value.trim())return;chatLines.push('Ty: '+input.value.trim());openPanel('chat');}
 function craftPlanks(){const status=document.getElementById('craftStatus');if(!creativeMode&&inventory[4]<1){status.textContent='Nemáš dubové dřevo.';return;}if(!creativeMode){inventory[4]--;inventory[7]+=4;}status.textContent='Vyrobeny 4 prkna!';}
 function emote(name){const status=document.getElementById('emoteStatus');if(status)status.textContent='Vybraná emoce: '+name+' (zobrazení animace bude doplněno).';}
+// Funkce volané tlačítky v HTML modulu musí být dostupné přes window.
+window.openPanel=openPanel;window.closePanel=closePanel;window.selectBlock=selectBlock;window.craftPlanks=craftPlanks;window.emote=emote;window.sendChat=sendChat;
 function playerOverlapsBlock(pos,block){
  const minX=pos.x-PLAYER_RADIUS,maxX=pos.x+PLAYER_RADIUS,minZ=pos.z-PLAYER_RADIUS,maxZ=pos.z+PLAYER_RADIUS;
  const feet=pos.y-PLAYER_EYE,head=pos.y+PLAYER_HEAD;
