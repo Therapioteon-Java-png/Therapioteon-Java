@@ -3,7 +3,7 @@
 <style>
 :root{color-scheme:dark;--green:#69c34a;--panel:#172117}*{box-sizing:border-box}body{margin:0;background:#10180f;color:#f2f5ed;font:16px system-ui,Segoe UI,sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:1px solid #78956c;border-radius:8px;padding:12px 16px;background:linear-gradient(#4c8e38,#326328);color:white;font-weight:800}button.secondary{background:#303d30}button:hover{filter:brightness(1.12)}.screen{display:none}.screen.active{display:block}#solo.active,#multi.active,#settings.active{min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(ellipse at top,#344b30,#0c120d 75%)}#menu{min-height:100vh;display:none;place-items:center;padding:22px;background:radial-gradient(ellipse at top,#344b30,#0c120d 75%)}#menu.active{display:grid}main{width:min(760px,100%);background:#172117ed;border:2px solid #43533e;border-radius:14px;padding:clamp(20px,5vw,42px);box-shadow:0 18px 70px #0009}h1{text-align:center;color:#9be477;font-size:clamp(30px,6vw,52px);margin:0;text-shadow:3px 3px #263b20}h2{color:#a6e68a}.sub{text-align:center;color:#b7c5b0;margin:8px 0 25px}label{display:block;font-weight:700;margin:14px 0 7px}input,select{width:100%;padding:13px;background:#0f170f;border:1px solid #62745b;border-radius:8px;color:white}.notice{background:#253424;border:1px solid #43533e;padding:12px;border-radius:8px;margin:14px 0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.wide{grid-column:1/-1}.check{display:flex;align-items:center;gap:10px}.check input{width:auto}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.back{margin-top:18px}.tag{display:inline-block;background:#263b24;color:#b8f49d;padding:4px 9px;border-radius:20px;font-size:12px}
 #game{height:100vh;width:100vw;overflow:hidden;position:relative;background:#8bc7ed}#world{display:block;width:100%;height:100%;outline:none}.hud{position:absolute;inset:0;pointer-events:none}.topbar{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.panel{background:#10180fcc;border:1px solid #b8d3a4;border-radius:8px;padding:9px 12px;text-shadow:1px 1px #000}.crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px;text-shadow:1px 1px #000}.hotbar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px;pointer-events:auto;background:#111bda;border:2px solid #ddd;padding:5px;border-radius:7px;background:#111bda55}.slot{width:58px;height:58px;border:2px solid #aaa;background:#202020cc;border-radius:5px;display:grid;place-items:center;font-size:11px;text-align:center;color:white}.slot.selected{border:3px solid #fff;background:#6b8b4dcc}.slot b{font-size:23px}.hint{position:absolute;bottom:92px;left:50%;transform:translateX(-50%);max-width:95%;text-align:center}.exit{pointer-events:auto}.centerMsg{position:absolute;left:50%;top:18%;transform:translateX(-50%);text-align:center;max-width:90%;background:#111bdaaa;padding:14px;border-radius:8px}
-@media(max-width:560px){.actions,.row{grid-template-columns:1fr}.wide{grid-column:auto}.slot{width:43px;height:50px}.hotbar{gap:2px}.hint{font-size:12px}}
+.game-tools{position:absolute;top:62px;left:12px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto;max-width:calc(100% - 24px)}.game-tools button{padding:7px 10px;font-size:12px}.game-panel{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 28px));max-height:78vh;overflow:auto;pointer-events:auto;background:#172117f5;border:2px solid #9ab78b;border-radius:12px;padding:18px;box-shadow:0 12px 50px #000b}.game-panel.open{display:block}.game-panel h2{margin:0 0 12px}.panel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.panel-grid button{padding:10px 5px}.panel-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.panel-actions button{flex:1}.panel-close{float:right}.chat-log{height:150px;overflow:auto;background:#0c130c;border:1px solid #596c50;border-radius:7px;padding:9px;margin:10px 0}.chat-line{margin:4px 0}.game-panel input{margin:5px 0}.game-panel p{line-height:1.45}.@media(max-width:560px){.actions,.row{grid-template-columns:1fr}.wide{grid-column:auto}.slot{width:43px;height:50px}.hotbar{gap:2px}.hint{font-size:12px}}
 </style></head><body>
 <section id="menu" class="screen active"><main><h1>THERAPIOTEON JAVA</h1><p class="sub">Vlastní svět. Vlastní dobrodružství.</p>
 <div class="notice"><span class="tag">BEZ PŘIHLAŠOVÁNÍ</span><br>Singleplayer spustíš rovnou. Herní jméno zadáš pouze při hraní více hráčů.</div>
@@ -11,28 +11,83 @@
 <section id="solo" class="screen"><main><h2>Hra jednoho hráče</h2><label for="worldName">Název světa</label><input id="worldName" value="Můj svět"><div class="row"><div><label for="difficulty">Obtížnost</label><select id="difficulty"><option>Mírumilovná</option><option>Lehká</option><option selected>Normální</option><option>Těžká</option></select></div><div><label for="mode">Herní režim</label><select id="mode"><option>Creative</option><option>Survival</option></select></div></div><div class="notice">První testovací svět je kreativní stavební prototyp. Bloky můžeš neomezeně pokládat a rozbíjet.</div><button onclick="launch()">VYTVOŘIT SVĚT</button> <button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="multi" class="screen"><main><h2>Hra více hráčů</h2><label for="multiPlayer">Tvoje herní jméno pro multiplayer</label><input id="multiPlayer" maxlength="16" placeholder="Zadej jméno, pod kterým tě uvidí ostatní"><div class="notice">Online multiplayer zatím není zapojený. Teď je dostupný testovací svět pro jednoho hráče.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
 <section id="settings" class="screen"><main><h2>Nastavení</h2><div class="notice">Herní jméno není pro singleplayer potřeba. Zadává se až při vstupu do multiplayeru.</div><button class="secondary" onclick="show('menu')">ZPĚT</button></main></section>
-<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><button class="secondary exit" onclick="leaveGame()">OPUSTIT SVĚT</button></div><div class="crosshair">+</div><div class="panel hint" id="hint">Klikni do světa pro zaměření • WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 výběr bloku</div><div class="hotbar" id="hotbar"></div></div></section>
+<section id="game" class="screen"><canvas id="world"></canvas><div class="hud"><div class="topbar"><div class="panel" id="worldLabel">THERAPIOTEON JAVA</div><button class="secondary exit" onclick="leaveGame()">OPUSTIT SVĚT</button></div><div class="crosshair">+</div><div class="panel hint" id="hint">Klikni do světa pro zaměření • WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 výběr bloku</div><div class="hotbar" id="hotbar"></div><div class="game-tools"><button onclick="openPanel('inventory')">O Inventář</button><button onclick="openPanel('craft')">E Crafting</button><button onclick="openPanel('chat')">T Chat</button><button onclick="openPanel('helper')">H Pomocník</button><button onclick="openPanel('emotes')">B Emoce</button></div><div class="game-panel" id="gamePanel"><button class="secondary panel-close" onclick="closePanel()">ZAVŘÍT ✕</button><div id="gamePanelContent"></div></div></div></section>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 const screens=['menu','solo','multi','settings','game'];window.show=id=>screens.forEach(s=>document.getElementById(s).classList.toggle('active',s===id));
 const blocks=[['Tráva',0x62a844,'🌱'],['Hlína',0x8b5a35,'🟫'],['Kámen',0x858585,'🪨'],['Písek',0xd9c27a,'🟨'],['Dubové dřevo',0x986536,'🪵'],['Listí',0x347a35,'🍃'],['Sklo',0xa8e7e8,'🔷'],['Prkna',0xb9854c,'🟧']];
-let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false;
+let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false,creativeMode=true,inventory=[0,0,0,0,0,0,0,0],chatLines=[];
 const PLAYER_RADIUS=.3,PLAYER_EYE=1.62,PLAYER_HEAD=.18;
 const canvas=document.getElementById('world'),hotbar=document.getElementById('hotbar');
 blocks.forEach((b,i)=>{const el=document.createElement('div');el.className='slot'+(i===0?' selected':'');el.innerHTML='<b>'+b[2]+'</b><span>'+(i+1)+' '+b[0]+'</span>';el.onclick=()=>selectBlock(i);hotbar.appendChild(el)});
 function selectBlock(i){selected=i;[...hotbar.children].forEach((e,n)=>e.classList.toggle('selected',n===i))}
-window.launch=()=>{document.getElementById('worldLabel').textContent='Svět: '+document.getElementById('worldName').value;show('game');if(!started)init();else renderer.setSize(innerWidth,innerHeight);};
+window.launch=()=>{document.getElementById('worldLabel').textContent='Svět: '+(document.getElementById('worldName').value.trim()||'Můj svět');creativeMode=document.getElementById('mode').value==='Creative';inventory=creativeMode?[64,64,64,64,64,64,64,64]:[0,0,0,0,0,0,0,0];show('game');if(!started)init();else{renderer.setSize(innerWidth,innerHeight);generateWorld();}closePanel();};
 function init(){started=true;scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc7ed);scene.fog=new THREE.Fog(0x8bc7ed,22,70);camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);camera.position.set(0,2.12,7);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x65734c,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(12,20,8);sun.castShadow=true;scene.add(sun);raycaster=new THREE.Raycaster();clock=new THREE.Clock();
 for(let x=-12;x<=12;x++)for(let z=-12;z<=12;z++){addBlock(x,0,z,(x+z)%7===0?3:0)}
 // malé kopce a stromy pro první testovací krajinu
 for(const [x,z] of [[-5,-4],[5,-6],[8,3],[-9,6]]){for(let y=1;y<=3;y++)addBlock(x,y,z,4);for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++)if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<4)addBlock(x+dx,dy,z+dz,5)}
 addBlock(0,1,0,1);addBlock(1,1,0,2);addBlock(2,1,0,3);addBlock(3,1,0,6);addBlock(4,1,0,7);
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(/^Digit[1-8]$/.test(e.code))selectBlock(Number(e.code.slice(5))-1);if(e.code==='Space'&&grounded){velocity.y=7;grounded=false}});document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('keydown',e=>{
+ if(e.code==='Escape'&&document.getElementById('gamePanel').classList.contains('open')){closePanel();return;}
+ if(document.getElementById('gamePanel').classList.contains('open'))return;
+ keys[e.code]=true;
+ if(/^Digit[1-8]$/.test(e.code))selectBlock(Number(e.code.slice(5))-1);
+ if(e.code==='KeyO'){e.preventDefault();openPanel('inventory');}
+ if(e.code==='KeyE'){e.preventDefault();openPanel('craft');}
+ if(e.code==='KeyT'){e.preventDefault();openPanel('chat');}
+ if(e.code==='KeyH'){e.preventDefault();openPanel('helper');}
+ if(e.code==='KeyB'){e.preventDefault();openPanel('emotes');}
+ if(e.code==='Space'&&grounded){velocity.y=7;grounded=false}
+});document.addEventListener('keyup',e=>keys[e.code]=false);
 canvas.addEventListener('click',()=>{if(!locked)canvas.requestPointerLock()});document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;document.getElementById('hint').textContent=locked?'WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 bloky • ESC uvolní myš':'Klikni do světa pro zaměření • WASD • mezerník • levé rozbije • pravé položí • 1–8 bloky'});
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-1.45,Math.min(1.45,pitch));camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0)});
-canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(!locked)return;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const hits=raycaster.intersectObjects(objects);if(!hits.length)return;const hit=hits[0];if(e.button===0){scene.remove(hit.object);objects=objects.filter(o=>o!==hit.object);hit.object.geometry.dispose();hit.object.material.dispose()}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);if(p.distanceTo(camera.position)>1.5)addBlock(Math.round(p.x),Math.round(p.y),Math.round(p.z),selected)}});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(!locked)return;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const hits=raycaster.intersectObjects(objects);if(!hits.length)return;const hit=hits[0];if(e.button===0){if(!creativeMode)inventory[hit.object.userData.type]=(inventory[hit.object.userData.type]||0)+1;scene.remove(hit.object);objects=objects.filter(o=>o!==hit.object);hit.object.geometry.dispose();hit.object.material.dispose()}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);if(!creativeMode&&inventory[selected]<1)return;if(p.distanceTo(camera.position)>1.5){const before=objects.length;addBlock(Math.round(p.x),Math.round(p.y),Math.round(p.z),selected);if(!creativeMode&&objects.length>before)inventory[selected]--;}}});
 animate();}
+function terrainHeight(x,z){return Math.floor((Math.sin(x*.23)+Math.cos(z*.21)+Math.sin((x+z)*.12))*1.15);}
+function generateWorld(){
+ for(const old of objects){scene.remove(old);old.geometry.dispose();old.material.dispose();}
+ objects=[];camera.position.set(0,1000,0);velocity.set(0,0,0);grounded=false;
+ for(let x=-20;x<=20;x++)for(let z=-20;z<=20;z++){
+  const h=terrainHeight(x,z);
+  for(let y=-3;y<=h;y++){const type=y===h?(h<=-1?3:0):(y>=h-2?1:2);addBlock(x,y,z,type);}
+ }
+ // Stromy na vybraných místech; kmeny a koruny jsou skutečné kolizní bloky.
+ for(const [x,z] of [[-7,-5],[7,-8],[10,5],[-12,9],[3,13],[-15,-12],[14,-14]]){
+  const base=terrainHeight(x,z);
+  for(let y=1;y<=3;y++)addBlock(x,base+y,z,4);
+  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++)
+   if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<4)addBlock(x+dx,base+dy,z+dz,5);
+ }
+ const spawnY=terrainHeight(0,7)+.5+PLAYER_EYE;
+ camera.position.set(0,spawnY,7);
+}
+function openPanel(kind){
+ if(document.pointerLockElement)document.exitPointerLock();
+ const panel=document.getElementById('gamePanel'),content=document.getElementById('gamePanelContent');
+ panel.classList.add('open');
+ const names={inventory:'Inventář',craft:'Crafting',chat:'Chat',helper:'Pomocník THERAPIOTEON',emotes:'Emoce a tance'};
+ let html='<h2>'+names[kind]+'</h2>';
+ if(kind==='inventory'){
+  html+='<p>Vyber blok do hotbaru. V režimu Creative jsou bloky neomezené.</p><div class="panel-grid">';
+  blocks.forEach((b,i)=>html+='<button onclick="selectBlock('+i+');closePanel()">'+b[2]+'<br>'+b[0]+'<br>'+(creativeMode?'∞':inventory[i])+'</button>');
+  html+='</div>';
+ }else if(kind==='craft'){
+  html+='<p>Jednoduché testovací recepty.</p><div class="notice">1 dubové dřevo → 4 prkna</div><button onclick="craftPlanks()">VYROBIT 4 PRKNA</button><p id="craftStatus"></p>';
+ }else if(kind==='chat'){
+  html+='<p>Místní testovací chat (zprávy se zatím neposílají ostatním hráčům).</p><div class="chat-log" id="chatLog">'+chatLines.map(x=>'<div class="chat-line">'+escapeText(x)+'</div>').join('')+'</div><input id="chatInput" maxlength="160" placeholder="Napiš zprávu…"><button onclick="sendChat()">ODESLAT</button>';
+ }else if(kind==='helper'){
+  html+='<p>Ahoj! S čím potřebuješ pomoct?</p><p>O otevře inventář, E crafting, T chat, H pomocníka a B emoce. WASD pohyb, mezerník skok, levé tlačítko rozbíjí bloky a pravé je pokládá.</p><div class="panel-actions"><button onclick="openPanel('+"'inventory'"+')">INVENTÁŘ</button><button onclick="openPanel('+"'craft'"+')">CRAFTING</button></div>';
+ }else{
+  html+='<p>Testovací nabídka emocí. Animace postavy zatím nejsou hotové.</p><div class="panel-grid"><button onclick="emote('+"'Ahoj!'"+')">👋 Ahoj</button><button onclick="emote('+"'Radost'"+')">🎉 Radost</button><button onclick="emote('+"'Tanec'"+')">🕺 Tanec</button><button onclick="emote('+"'Souhlas'"+')">👍 Souhlas</button></div><p id="emoteStatus"></p>';
+ }
+ content.innerHTML=html;
+}
+function closePanel(){document.getElementById('gamePanel').classList.remove('open');}
+function escapeText(s){return s.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));}
+function sendChat(){const input=document.getElementById('chatInput');if(!input||!input.value.trim())return;chatLines.push('Ty: '+input.value.trim());openPanel('chat');}
+function craftPlanks(){const status=document.getElementById('craftStatus');if(!creativeMode&&inventory[4]<1){status.textContent='Nemáš dubové dřevo.';return;}if(!creativeMode){inventory[4]--;inventory[7]+=4;}status.textContent='Vyrobeny 4 prkna!';}
+function emote(name){const status=document.getElementById('emoteStatus');if(status)status.textContent='Vybraná emoce: '+name+' (zobrazení animace bude doplněno).';}
 function playerOverlapsBlock(pos,block){
  const minX=pos.x-PLAYER_RADIUS,maxX=pos.x+PLAYER_RADIUS,minZ=pos.z-PLAYER_RADIUS,maxZ=pos.z+PLAYER_RADIUS;
  const feet=pos.y-PLAYER_EYE,head=pos.y+PLAYER_HEAD;
