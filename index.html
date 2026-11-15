@@ -16,13 +16,24 @@
 <script type="module">
 import * as THREE from 'three';
 const screens=['menu','solo','multi','settings','game'];window.show=id=>{if(!screens.includes(id))return;if(id!=='game'){if(document.pointerLockElement)document.exitPointerLock();closePanel();keys={};}screens.forEach(s=>document.getElementById(s).classList.toggle('active',s===id));};
-const blocks=[['Tráva',0x62a844,'🌱'],['Hlína',0x8b5a35,'🟫'],['Kámen',0x858585,'🪨'],['Písek',0xd9c27a,'🟨'],['Dubové dřevo',0x986536,'🪵'],['Listí',0x347a35,'🍃'],['Sklo',0xa8e7e8,'🔷'],['Prkna',0xb9854c,'🟧']];
-let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false,creativeMode=true,inventory=[0,0,0,0,0,0,0,0],chatLines=[];
+const blocks=[
+ ['Tráva',0x62a844,'🌱'],['Hlína',0x8b5a35,'🟫'],['Kámen',0x858585,'🪨'],['Písek',0xd9c27a,'🟨'],
+ ['Dubové dřevo',0x986536,'🪵'],['Listí',0x347a35,'🍃'],['Sklo',0xa8e7e8,'🔷'],['Dubová prkna',0xb9854c,'🟧'],
+ ['Dlažební kámen',0x696969,'◼️'],['Bedrock',0x303030,'⬛'],['Březové dřevo',0xd9c99d,'🌳'],['Březové listí',0x70a94b,'🌿'],
+ ['Cihly',0x9b5145,'🧱'],['Pískovec',0xc9ad72,'🟨'],['Sníh',0xf2f5f5,'❄️'],['Led',0x9bd9ef,'🧊'],
+ ['Uhelná ruda',0x55565a,'⚫'],['Železná ruda',0xa99b8d,'⛏️'],['Zlatá ruda',0xd6b64e,'🟡'],['Diamantová ruda',0x54d8d2,'💎'],
+ ['Pracovní stůl',0x9a673d,'🛠️'],['Pec',0x55565b,'🔥'],['Truhla',0xa9783f,'📦'],['Sud',0x8b633a,'🛢️'],
+ ['Dveře',0x9a7043,'🚪'],['Půlblok',0xb58a54,'➖'],['Schody',0x9b754b,'🪜'],['Plot',0x986536,'🪵'],
+ ['Cedule',0xc39a60,'🪧'],['Redstone blok',0x9d2929,'🔴'],['TNT',0xc94335,'🧨'],['Obsidián',0x302344,'🟪'],
+ ['Voda',0x357bd1,'💧'],['Láva',0xe46a20,'🌋']
+];
+let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false,creativeMode=true,inventory=Array.from({length:blocks.length},()=>0),chatLines=[];
 const PLAYER_RADIUS=.3,PLAYER_EYE=1.62,PLAYER_HEAD=.18;
 const canvas=document.getElementById('world'),hotbar=document.getElementById('hotbar');
-blocks.forEach((b,i)=>{const el=document.createElement('div');el.className='slot'+(i===0?' selected':'');el.innerHTML='<b>'+b[2]+'</b><span>'+(i+1)+' '+b[0]+'</span>';el.onclick=()=>selectBlock(i);hotbar.appendChild(el)});
-function selectBlock(i){selected=i;[...hotbar.children].forEach((e,n)=>e.classList.toggle('selected',n===i))}
-window.launch=()=>{document.getElementById('worldLabel').textContent='Svět: '+(document.getElementById('worldName').value.trim()||'Můj svět');creativeMode=document.getElementById('mode').value==='Creative';inventory=creativeMode?[64,64,64,64,64,64,64,64]:[0,0,0,0,0,0,0,0];show('game');if(!started)init();else{renderer.setSize(innerWidth,innerHeight);generateWorld();}closePanel();};
+blocks.slice(0,8).forEach((b,i)=>{const el=document.createElement('div');el.className='slot'+(i===0?' selected':'');el.dataset.block=i;el.innerHTML='<b>'+b[2]+'</b><span>'+(i+1)+' '+b[0]+'</span>';el.onclick=()=>selectBlock(Number(el.dataset.block),i);hotbar.appendChild(el)});
+function selectBlock(i,slotIndex=null){selected=i;let target=slotIndex;if(target===null)target=[...hotbar.children].findIndex(e=>Number(e.dataset.block)===i);if(target<0){target=0;const el=hotbar.children[target];el.dataset.block=i;el.innerHTML='<b>'+blocks[i][2]+'</b><span>1 '+blocks[i][0]+'</span>';}[...hotbar.children].forEach((e,n)=>e.classList.toggle('selected',n===target));}
+function selectHotbar(n){const el=hotbar.children[n];if(el)selectBlock(Number(el.dataset.block),n)}
+window.launch=()=>{document.getElementById('worldLabel').textContent='Svět: '+(document.getElementById('worldName').value.trim()||'Můj svět');creativeMode=document.getElementById('mode').value==='Creative';inventory=Array.from({length:blocks.length},()=>creativeMode?64:0);show('game');if(!started)init();else{renderer.setSize(innerWidth,innerHeight);generateWorld();}closePanel();};
 function init(){started=true;scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc7ed);scene.fog=new THREE.Fog(0x8bc7ed,22,70);camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);camera.position.set(0,2.12,7);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x65734c,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(12,20,8);sun.castShadow=true;scene.add(sun);raycaster=new THREE.Raycaster();clock=new THREE.Clock();
 for(let x=-12;x<=12;x++)for(let z=-12;z<=12;z++){addBlock(x,0,z,(x+z)%7===0?3:0)}
 // malé kopce a stromy pro první testovací krajinu
@@ -32,7 +43,7 @@ document.addEventListener('keydown',e=>{
  if(e.code==='Escape'&&document.getElementById('gamePanel').classList.contains('open')){closePanel();return;}
  if(document.getElementById('gamePanel').classList.contains('open'))return;
  keys[e.code]=true;
- if(/^Digit[1-8]$/.test(e.code))selectBlock(Number(e.code.slice(5))-1);
+ if(/^Digit[1-8]$/.test(e.code))selectHotbar(Number(e.code.slice(5))-1);
  if(e.code==='KeyO'){e.preventDefault();openPanel('inventory');}
  if(e.code==='KeyE'){e.preventDefault();openPanel('craft');}
  if(e.code==='KeyT'){e.preventDefault();openPanel('chat');}
@@ -92,11 +103,11 @@ function openPanel(kind){
  const names={inventory:'Inventář',craft:'Crafting',chat:'Chat',helper:'Pomocník THERAPIOTEON',emotes:'Emoce a tance'};
  let html='<h2>'+names[kind]+'</h2>';
  if(kind==='inventory'){
-  html+='<p>Vyber blok do hotbaru. V režimu Creative jsou bloky neomezené.</p><div class="panel-grid">';
-  blocks.forEach((b,i)=>html+='<button onclick="selectBlock('+i+');closePanel()">'+b[2]+'<br>'+b[0]+'<br>'+(creativeMode?'∞':inventory[i])+'</button>');
+  html+='<p>Vyber z '+blocks.length+' druhů bloků. V režimu Creative jsou neomezené. Čísla 1–8 vybírají hotbar.</p><div class="panel-grid">';
+  blocks.forEach((b,i)=>html+='<button title="'+b[0]+'" onclick="selectBlock('+i+');closePanel()">'+b[2]+'<br>'+b[0]+'<br>'+(creativeMode?'∞':(inventory[i]||0))+'</button>');
   html+='</div>';
  }else if(kind==='craft'){
-  html+='<p>Jednoduché testovací recepty.</p><div class="notice">1 dubové dřevo → 4 prkna</div><button onclick="craftPlanks()">VYROBIT 4 PRKNA</button><p id="craftStatus"></p>';
+  html+='<p>Testovací crafting.</p><div class="notice">1 dubové dřevo → 4 dubová prkna</div><button onclick="craftPlanks()">VYROBIT 4 PRKNA</button><p id="craftStatus"></p><div class="notice">Další recepty a funkce pracovního stolu se doplní v další části vývoje.</div>';
  }else if(kind==='chat'){
   html+='<p>Místní testovací chat (zprávy se zatím neposílají ostatním hráčům).</p><div class="chat-log" id="chatLog">'+chatLines.map(x=>'<div class="chat-line">'+escapeText(x)+'</div>').join('')+'</div><input id="chatInput" maxlength="160" placeholder="Napiš zprávu…"><button onclick="sendChat()">ODESLAT</button>';
  }else if(kind==='helper'){
