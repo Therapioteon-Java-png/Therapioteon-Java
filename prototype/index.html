@@ -17,23 +17,61 @@
 import * as THREE from 'three';
 const screens=['menu','solo','multi','settings','game'];window.show=id=>screens.forEach(s=>document.getElementById(s).classList.toggle('active',s===id));
 const blocks=[['Tráva',0x62a844,'🌱'],['Hlína',0x8b5a35,'🟫'],['Kámen',0x858585,'🪨'],['Písek',0xd9c27a,'🟨'],['Dubové dřevo',0x986536,'🪵'],['Listí',0x347a35,'🍃'],['Sklo',0xa8e7e8,'🔷'],['Prkna',0xb9854c,'🟧']];
-let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity= new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false;
+let scene,camera,renderer,raycaster,clock,selected=0,objects=[],keys={},velocity=new THREE.Vector3(),yaw=0,pitch=0,locked=false,started=false,grounded=false;
+const PLAYER_RADIUS=.3,PLAYER_EYE=1.62,PLAYER_HEAD=.18;
 const canvas=document.getElementById('world'),hotbar=document.getElementById('hotbar');
 blocks.forEach((b,i)=>{const el=document.createElement('div');el.className='slot'+(i===0?' selected':'');el.innerHTML='<b>'+b[2]+'</b><span>'+(i+1)+' '+b[0]+'</span>';el.onclick=()=>selectBlock(i);hotbar.appendChild(el)});
 function selectBlock(i){selected=i;[...hotbar.children].forEach((e,n)=>e.classList.toggle('selected',n===i))}
 window.launch=()=>{document.getElementById('worldLabel').textContent='Svět: '+document.getElementById('worldName').value;show('game');if(!started)init();else renderer.setSize(innerWidth,innerHeight);};
-function init(){started=true;scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc7ed);scene.fog=new THREE.Fog(0x8bc7ed,22,70);camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);camera.position.set(0,2,7);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x65734c,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(12,20,8);sun.castShadow=true;scene.add(sun);raycaster=new THREE.Raycaster();clock=new THREE.Clock();
+function init(){started=true;scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc7ed);scene.fog=new THREE.Fog(0x8bc7ed,22,70);camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);camera.position.set(0,2.12,7);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x65734c,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(12,20,8);sun.castShadow=true;scene.add(sun);raycaster=new THREE.Raycaster();clock=new THREE.Clock();
 for(let x=-12;x<=12;x++)for(let z=-12;z<=12;z++){addBlock(x,0,z,(x+z)%7===0?3:0)}
 // malé kopce a stromy pro první testovací krajinu
 for(const [x,z] of [[-5,-4],[5,-6],[8,3],[-9,6]]){for(let y=1;y<=3;y++)addBlock(x,y,z,4);for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=3;dy<=5;dy++)if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<4)addBlock(x+dx,dy,z+dz,5)}
 addBlock(0,1,0,1);addBlock(1,1,0,2);addBlock(2,1,0,3);addBlock(3,1,0,6);addBlock(4,1,0,7);
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(/^Digit[1-8]$/.test(e.code))selectBlock(Number(e.code.slice(5))-1);if(e.code==='Space'&&camera.position.y<=2.05)velocity.y=7});document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(/^Digit[1-8]$/.test(e.code))selectBlock(Number(e.code.slice(5))-1);if(e.code==='Space'&&grounded){velocity.y=7;grounded=false}});document.addEventListener('keyup',e=>keys[e.code]=false);
 canvas.addEventListener('click',()=>{if(!locked)canvas.requestPointerLock()});document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;document.getElementById('hint').textContent=locked?'WASD pohyb • mezerník skok • levé tlačítko rozbije • pravé položí • 1–8 bloky • ESC uvolní myš':'Klikni do světa pro zaměření • WASD • mezerník • levé rozbije • pravé položí • 1–8 bloky'});
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-1.45,Math.min(1.45,pitch));camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0)});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(!locked)return;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const hits=raycaster.intersectObjects(objects);if(!hits.length)return;const hit=hits[0];if(e.button===0){scene.remove(hit.object);objects=objects.filter(o=>o!==hit.object);hit.object.geometry.dispose();hit.object.material.dispose()}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);if(p.distanceTo(camera.position)>1.5)addBlock(Math.round(p.x),Math.round(p.y),Math.round(p.z),selected)}});
 animate();}
-function addBlock(x,y,z,type){const material=new THREE.MeshStandardMaterial({color:blocks[type][1],roughness:type===6?.18:.9,transparent:type===6,opacity:type===6?.48:1});const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.type=type;scene.add(mesh);objects.push(mesh)}
-function animate(){requestAnimationFrame(animate);if(!started||!document.getElementById('game').classList.contains('active'))return;const dt=Math.min(clock.getDelta(),.04);if(locked){const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));const move=new THREE.Vector3();if(keys.KeyW)move.add(forward);if(keys.KeyS)move.sub(forward);if(keys.KeyD)move.add(right);if(keys.KeyA)move.sub(right);if(move.lengthSq())move.normalize().multiplyScalar(6*dt);camera.position.add(move);velocity.y-=18*dt;camera.position.y+=velocity.y*dt;if(camera.position.y<2){camera.position.y=2;velocity.y=0}}renderer.render(scene,camera)}
+function playerOverlapsBlock(pos,block){
+ const minX=pos.x-PLAYER_RADIUS,maxX=pos.x+PLAYER_RADIUS,minZ=pos.z-PLAYER_RADIUS,maxZ=pos.z+PLAYER_RADIUS;
+ const feet=pos.y-PLAYER_EYE,head=pos.y+PLAYER_HEAD;
+ return maxX>block.position.x-.5+.001&&minX<block.position.x+.5-.001&&maxZ>block.position.z-.5+.001&&minZ<block.position.z+.5-.001&&head>block.position.y-.5+.001&&feet<block.position.y+.5-.001;
+}
+function collidesAt(pos){return objects.some(block=>playerOverlapsBlock(pos,block))}
+function addBlock(x,y,z,type){
+ // Nepokládej kostku do jiné kostky ani přímo do hráče.
+ if(objects.some(o=>o.position.x===x&&o.position.y===y&&o.position.z===z))return;
+ const testPos=camera?camera.position:new THREE.Vector3(999,999,999);
+ if(camera&&playerOverlapsBlock(testPos,{position:new THREE.Vector3(x,y,z)}))return;
+ const material=new THREE.MeshStandardMaterial({color:blocks[type][1],roughness:type===6?.18:.9,transparent:type===6,opacity:type===6?.48:1});
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.type=type;scene.add(mesh);objects.push(mesh)
+}
+function animate(){
+ requestAnimationFrame(animate);
+ if(!started||!document.getElementById('game').classList.contains('active'))return;
+ const dt=Math.min(clock.getDelta(),.04);
+ if(locked){
+  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const move=new THREE.Vector3();
+  if(keys.KeyW)move.add(forward);if(keys.KeyS)move.sub(forward);if(keys.KeyD)move.add(right);if(keys.KeyA)move.sub(right);
+  if(move.lengthSq()){
+   move.normalize().multiplyScalar(6*dt);
+   const nextX=camera.position.clone();nextX.x+=move.x;if(!collidesAt(nextX))camera.position.x=nextX.x;
+   const nextZ=camera.position.clone();nextZ.z+=move.z;if(!collidesAt(nextZ))camera.position.z=nextZ.z;
+  }
+  velocity.y-=18*dt;
+  const nextY=camera.position.clone();nextY.y+=velocity.y*dt;
+  grounded=false;
+  const hit=objects.find(block=>playerOverlapsBlock(nextY,block));
+  if(hit){
+   if(velocity.y<0){camera.position.y=hit.position.y+.5+PLAYER_EYE;grounded=true;}
+   else if(velocity.y>0){camera.position.y=hit.position.y-.5-PLAYER_HEAD;}
+   velocity.y=0;
+  }else camera.position.y=nextY.y;
+ }
+ renderer.render(scene,camera)
+}
 window.addEventListener('resize',()=>{if(!started)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 window.leaveGame=()=>{if(document.pointerLockElement)document.exitPointerLock();show('menu')};
 </script></body></html>
