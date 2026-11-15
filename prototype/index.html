@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THERAPIOTEON JAVA</title>
+<style>
+:root{color-scheme:dark;--bg:#111811;--panel:#202c20;--panel2:#2d3d2b;--green:#69c34a;--text:#f2f5ed;--muted:#b7c5b0;--line:#43533e}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#344b30 0,#182318 45%,#0c120d 100%);font-family:system-ui,Segoe UI,sans-serif;color:var(--text);display:grid;place-items:center;padding:24px}
+main{width:min(760px,100%);background:#172117ed;border:2px solid var(--line);box-shadow:0 18px 70px #0009;border-radius:14px;padding:clamp(20px,5vw,42px)}
+h1{font-size:clamp(30px,6vw,52px);letter-spacing:2px;text-align:center;margin:0;color:#9be477;text-shadow:3px 3px #263b20}
+.sub{text-align:center;color:var(--muted);margin:6px 0 26px}.screen{display:none}.screen.active{display:block}
+label{display:block;font-weight:700;margin:14px 0 7px}input,select{width:100%;padding:13px;background:#0f170f;border:1px solid #62745b;border-radius:8px;color:white;font:inherit}
+button{border:1px solid #78956c;border-radius:8px;padding:13px 16px;background:linear-gradient(#4c8e38,#326328);color:white;font-weight:800;font-size:15px;cursor:pointer}
+button:hover{filter:brightness(1.13)}button.secondary{background:#303d30}button.danger{background:#633b32}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.actions .wide{grid-column:1/-1}
+.notice{background:#253424;border:1px solid var(--line);padding:12px;border-radius:8px;color:#d7e5d0;margin:14px 0}
+h2{color:#a6e68a;margin-top:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;align-items:center;gap:10px;margin:12px 0}.check input{width:auto}
+ul{line-height:1.8;color:var(--muted)}.back{margin-top:20px}.tag{display:inline-block;background:#263b24;color:#b8f49d;padding:4px 9px;border-radius:20px;font-size:12px}
+@media(max-width:520px){.row,.actions{grid-template-columns:1fr}.actions .wide{grid-column:auto}}
+</style></head>
+<body><main>
+<h1>THERAPIOTEON JAVA</h1><p class="sub">Vlastní svět. Vlastní dobrodružství.</p>
+<section id="home" class="screen active">
+<div class="notice"><span class="tag">BEZ PŘIHLAŠOVÁNÍ</span><br>Žádný účet, heslo, e-mail ani registrace. Zvol si pouze herní jméno.</div>
+<label for="player">Tvoje herní jméno</label><input id="player" maxlength="16" placeholder="Zadej herní jméno">
+<div class="actions">
+<button class="wide" onclick="go('solo')">HRA JEDNOHO HRÁČE</button>
+<button class="wide" onclick="go('multi')">HRA VÍCE HRÁČŮ</button>
+<button class="secondary" onclick="go('settings')">NASTAVENÍ</button>
+<button class="danger" onclick="alert('Toto je webový prototyp. Hru lze zavřít zavřením karty.')">UKONČIT HRU</button>
+</div></section>
+<section id="solo" class="screen"><h2>Hra jednoho hráče</h2><p class="sub">Vytvoř nový svět nebo pokračuj v uloženém.</p>
+<label for="soloWorld">Název světa</label><input id="soloWorld" value="Můj svět">
+<div class="row"><div><label for="soloDiff">Obtížnost</label><select id="soloDiff"><option>Mírumilovná</option><option>Lehká</option><option selected>Normální</option><option>Těžká</option></select></div><div><label for="soloMode">Herní režim</label><select id="soloMode"><option>Survival</option><option>Creative</option></select></div></div>
+<label class="check"><input id="soloCmd" type="checkbox"> Povolit příkazy</label><label class="check"><input id="soloChat" type="checkbox" checked> Povolit chat</label>
+<div class="actions"><button class="wide" onclick="startWorld('solo')">VYTVOŘIT SVĚT</button><button class="secondary wide" onclick="alert('Načítání uložených světů bude doplněno v další fázi.')">NAČÍST ULOŽENÝ SVĚT</button></div>
+<button class="secondary back" onclick="go('home')">ZPĚT</button></section>
+<section id="multi" class="screen"><h2>Hra více hráčů</h2><div class="notice">Multiplayer a přátelé potřebují online serverovou infrastrukturu. Tato obrazovka je zatím návrh rozhraní.</div>
+<div class="actions"><button class="secondary" onclick="go('friends')">FRIENDS</button><button class="secondary" onclick="go('createMulti')">VYTVOŘIT SVĚT</button><button class="secondary wide" onclick="alert('Připojení k serverům bude doplněno po vytvoření multiplayerového backendu.')">PŘIPOJIT SE K SERVERU</button></div>
+<button class="secondary back" onclick="go('home')">ZPĚT</button></section>
+<section id="createMulti" class="screen"><h2>Vytvořit multiplayerový svět</h2>
+<label for="multiWorld">Název světa</label><input id="multiWorld" value="Můj server">
+<div class="row"><div><label for="multiDiff">Obtížnost</label><select id="multiDiff"><option>Mírumilovná</option><option>Lehká</option><option selected>Normální</option><option>Těžká</option></select></div><div><label for="multiMode">Herní režim</label><select id="multiMode"><option>Survival</option><option>Creative</option></select></div></div>
+<label class="check"><input id="multiCmd" type="checkbox"> Povolit příkazy</label><label class="check"><input id="multiChat" type="checkbox" checked> Povolit chat</label>
+<div class="notice">Hostitel nastavuje pravidla světa. Skutečné sdílení s přáteli bude aktivní až po vytvoření síťového backendu.</div>
+<button class="wide" onclick="startWorld('multi')">VYTVOŘIT SVĚT</button><button class="secondary back" onclick="go('multi')">ZPĚT</button></section>
+<section id="friends" class="screen"><h2>FRIENDS</h2><p>Seznam přátel a pozvánky budou napojeny na multiplayerový backend.</p><div class="notice">Zatím zde nejsou žádní přátelé.</div><button class="secondary back" onclick="go('multi')">ZPĚT</button></section>
+<section id="settings" class="screen"><h2>Nastavení</h2><label for="rename">Herní jméno</label><input id="rename" maxlength="16" placeholder="Tvoje herní jméno"><div class="notice">Bez účtu a hesla. Herní jméno lze změnit lokálně v tomto prototypu.</div><button onclick="saveName()">ULOŽIT JMÉNO</button><button class="secondary back" onclick="go('home')">ZPĚT</button></section>
+<section id="loading" class="screen"><h2>Načítání světa…</h2><p id="loadingText">Připravujeme svět.</p><div class="notice">Toto je pouze ukázka nastavení a nabídky. 3D herní svět zatím není implementovaný.</div><button class="secondary" onclick="go('home')">ZPĚT DO HLAVNÍ NABÍDKY</button></section>
+</main>
+<script>
+const ids=['home','solo','multi','createMulti','friends','settings','loading'];
+function go(id){ids.forEach(x=>document.getElementById(x).classList.toggle('active',x===id));}
+function playerName(){const n=document.getElementById('player').value.trim();if(!n){alert('Nejdřív zadej herní jméno.');return null;}return n;}
+function saveName(){const n=document.getElementById('rename').value.trim();if(!n){alert('Zadej herní jméno.');return;}document.getElementById('player').value=n;alert('Jméno je nastavené.');go('home');}
+function startWorld(kind){const n=playerName();if(!n)return;const p=kind==='solo'?'solo':'multi';const world=document.getElementById(p+'World').value.trim()||'Můj svět';const diff=document.getElementById(p+'Diff').value;const mode=document.getElementById(p+'Mode').value;const cmds=document.getElementById(p+'Cmd').checked?'zapnuté':'vypnuté';const chat=document.getElementById(p+'Chat').checked?'zapnutý':'vypnutý';document.getElementById('loadingText').textContent='Hráč '+n+' • '+world+' • '+diff+' • '+mode+' • příkazy '+cmds+' • chat '+chat;go('loading');}
+</script></body></html>
